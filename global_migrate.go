@@ -62,11 +62,17 @@ func internalRegister(name string, up MigrationFunc, down MigrationFunc, skip in
 //		 })
 //	 }
 func Register(name string, up MigrationFunc, down MigrationFunc) error {
+	if _, ok := globalMigrate[name]; !ok {
+		globalMigrate[name] = NewMigrate(nil)
+	}
 	return internalRegister(name, up, down, 2)
 }
 
 // MustRegister acts like Register but panics on errors.
 func MustRegister(name string, up, down MigrationFunc) {
+	if _, ok := globalMigrate[name]; !ok {
+		globalMigrate[name] = NewMigrate(nil)
+	}
 	if err := internalRegister(name, up, down, 2); err != nil {
 		panic(err)
 	}
