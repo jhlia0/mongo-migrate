@@ -7,18 +7,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var globalMigrate = NewMigrate(nil)
+var globalMigrate = map[string]*Migrate{}
 
-func internalRegister(up, down MigrationFunc, skip int) error {
+func internalRegister(name string, up MigrationFunc, down MigrationFunc, skip int) error {
 	_, file, _, _ := runtime.Caller(skip)
 	version, description, err := extractVersionDescription(file)
 	if err != nil {
 		return err
 	}
-	if hasVersion(globalMigrate.migrations, version) {
+	if hasVersion(globalMigrate[name].migrations, version) {
 		return fmt.Errorf("migration with version %v already registered", version)
 	}
-	globalMigrate.migrations = append(globalMigrate.migrations, Migration{
+	globalMigrate[name].migrations = append(globalMigrate[name].migrations, Migration{
 		Version:     version,
 		Description: description,
 		Up:          up,
@@ -34,74 +34,76 @@ func internalRegister(up, down MigrationFunc, skip int) error {
 //
 // - Use the following template inside:
 //
-//  package migrations
+//	 package migrations
 //
-//  import (
-// 	 "go.mongodb.org/mongo-driver/bson"
-// 	 "go.mongodb.org/mongo-driver/mongo"
-// 	 "go.mongodb.org/mongo-driver/mongo/options"
-// 	 "github.com/xakep666/mongo-migrate"
-//  )
+//	 import (
+//		 "go.mongodb.org/mongo-driver/bson"
+//		 "go.mongodb.org/mongo-driver/mongo"
+//		 "go.mongodb.org/mongo-driver/mongo/options"
+//		 "github.com/jhlia0/mongo-migrate"
+//	 )
 //
-//  func init() {
-// 	 Register(func(db *mongo.Database) error {
-// 	 	 opt := options.Index().SetName("my-index")
-// 	 	 keys := bson.D{{"my-key", 1}}
-// 	 	 model := mongo.IndexModel{Keys: keys, Options: opt}
-// 	 	 _, err := db.Collection("my-coll").Indexes().CreateOne(context.TODO(), model)
-// 	 	 if err != nil {
-// 	 		 return err
-// 	 	 }
-// 	 	 return nil
-// 	 }, func(db *mongo.Database) error {
-// 	 	 _, err := db.Collection("my-coll").Indexes().DropOne(context.TODO(), "my-index")
-// 	 	 if err != nil {
-// 	 		 return err
-// 	 	 }
-// 	 	 return nil
-// 	 })
-//  }
-func Register(up, down MigrationFunc) error {
-	return internalRegister(up, down, 2)
+//	 func init() {
+//		 Register(func(db *mongo.Database) error {
+//		 	 opt := options.Index().SetName("my-index")
+//		 	 keys := bson.D{{"my-key", 1}}
+//		 	 model := mongo.IndexModel{Keys: keys, Options: opt}
+//		 	 _, err := db.Collection("my-coll").Indexes().CreateOne(context.TODO(), model)
+//		 	 if err != nil {
+//		 		 return err
+//		 	 }
+//		 	 return nil
+//		 }, func(db *mongo.Database) error {
+//		 	 _, err := db.Collection("my-coll").Indexes().DropOne(context.TODO(), "my-index")
+//		 	 if err != nil {
+//		 		 return err
+//		 	 }
+//		 	 return nil
+//		 })
+//	 }
+func Register(name string, up MigrationFunc, down MigrationFunc) error {
+	return internalRegister(name, up, down, 2)
 }
 
 // MustRegister acts like Register but panics on errors.
-func MustRegister(up, down MigrationFunc) {
-	if err := internalRegister(up, down, 2); err != nil {
+func MustRegister(name string, up, down MigrationFunc) {
+	if err := internalRegister(name, up, down, 2); err != nil {
 		panic(err)
 	}
 }
 
 // RegisteredMigrations returns all registered migrations.
-func RegisteredMigrations() []Migration {
-	ret := make([]Migration, len(globalMigrate.migrations))
-	copy(ret, globalMigrate.migrations)
+func RegisteredMigrations(name string) []Migration {
+	ret := make([]Migration, len(globalMigrate[name].migrations))
+	copy(ret, globalMigrate[name].migrations)
 	return ret
 }
 
 // SetDatabase sets database for global migrate.
-func SetDatabase(db *mongo.Database) {
-	globalMigrate.db = db
+func SetDatabase(name string, db *mongo.Database) {
+	if m, ok := globalMigrate[name]; ok {
+		m.db = db
+	}
 }
 
 // SetMigrationsCollection changes default collection name for migrations history.
-func SetMigrationsCollection(name string) {
-	globalMigrate.SetMigrationsCollection(name)
+func SetMigrationsCollection(migrationName, collectionName string) {
+	globalMigrate[migrationName].SetMigrationsCollection(collectionName)
 }
 
 // Version returns current database version.
-func Version() (uint64, string, error) {
-	return globalMigrate.Version()
+func Version(name string) (uint64, string, error) {
+	return globalMigrate[name].Version()
 }
 
 // Up performs "up" migration using registered migrations.
 // Detailed description available in Migrate.Up().
-func Up(n int) error {
-	return globalMigrate.Up(n)
+func Up(name string, n int) error {
+	return globalMigrate[name].Up(n)
 }
 
 // Down performs "down" migration using registered migrations.
 // Detailed description available in Migrate.Down().
-func Down(n int) error {
-	return globalMigrate.Down(n)
+func Down(name string, n int) error {
+	return globalMigrate[name].Down(n)
 }

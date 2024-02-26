@@ -1,8 +1,8 @@
 # Versioned migrations for MongoDB
 [![Build Status](https://travis-ci.org/xakep666/mongo-migrate.svg?branch=master)](https://travis-ci.org/xakep666/mongo-migrate)
 [![codecov](https://codecov.io/gh/xakep666/mongo-migrate/branch/master/graph/badge.svg)](https://codecov.io/gh/xakep666/mongo-migrate)
-[![Go Report Card](https://goreportcard.com/badge/github.com/xakep666/mongo-migrate)](https://goreportcard.com/report/github.com/xakep666/mongo-migrate)
-[![GoDoc](https://godoc.org/github.com/xakep666/mongo-migrate?status.svg)](https://godoc.org/github.com/xakep666/mongo-migrate)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jhlia0/mongo-migrate)](https://goreportcard.com/report/github.com/jhlia0/mongo-migrate)
+[![GoDoc](https://godoc.org/github.com/jhlia0/mongo-migrate?status.svg)](https://godoc.org/github.com/jhlia0/mongo-migrate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This package allows to perform versioned migrations on your MongoDB using [mongo-go-driver](https://github.com/mongodb/mongo-go-driver).
@@ -24,7 +24,7 @@ Table of Contents
 
 ## Installation
 ```bash
-go get -v -u github.com/xakep666/mongo-migrate
+go get -v -u github.com/jhlia0/mongo-migrate
 ```
 
 ## Usage
@@ -42,7 +42,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	migrate "github.com/xakep666/mongo-migrate"
+	migrate "github.com/jhlia0/mongo-migrate"
 )
 
 func init() {
@@ -70,7 +70,7 @@ func init() {
 ```go
 import (
     ...
-    migrate "github.com/xakep666/mongo-migrate"
+    migrate "github.com/jhlia0/mongo-migrate"
     _ "path/to/migrations_package" // database migrations
     ...
 )

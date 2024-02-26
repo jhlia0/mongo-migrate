@@ -11,9 +11,9 @@ func TestBadMigrationFile(t *testing.T) {
 	defer func() {
 		globalMigrate = oldMigrate
 	}()
-	globalMigrate = NewMigrate(nil)
+	globalMigrate = map[string]*Migrate{}
 
-	err := Register(func(db *mongo.Database) error {
+	err := Register("test", func(db *mongo.Database) error {
 		return nil
 	}, func(db *mongo.Database) error {
 		return nil
@@ -31,8 +31,8 @@ func TestBadMigrationFilePanic(t *testing.T) {
 			t.Errorf("Unexpectedly no panic recovered")
 		}
 	}()
-	globalMigrate = NewMigrate(nil)
-	MustRegister(func(db *mongo.Database) error {
+	globalMigrate = map[string]*Migrate{}
+	MustRegister("test", func(db *mongo.Database) error {
 		return nil
 	}, func(db *mongo.Database) error {
 		return nil

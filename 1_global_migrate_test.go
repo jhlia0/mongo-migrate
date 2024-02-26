@@ -12,18 +12,18 @@ func TestGlobalMigrateSetGet(t *testing.T) {
 		globalMigrate = oldMigrate
 	}()
 	db := &mongo.Database{}
-	globalMigrate = NewMigrate(db)
+	globalMigrate = map[string]*Migrate{}
 
-	if globalMigrate.db != db {
+	if globalMigrate["test"].db != db {
 		t.Errorf("Unexpected non-equal dbs")
 	}
 	db2 := &mongo.Database{}
-	SetDatabase(db2)
-	if globalMigrate.db != db2 {
+	SetDatabase("test", db2)
+	if globalMigrate["test"].db != db2 {
 		t.Errorf("Unexpected non-equal dbs")
 	}
-	SetMigrationsCollection("test")
-	if globalMigrate.migrationsCollection != "test" {
+	SetMigrationsCollection("test", "test")
+	if globalMigrate["test"].migrationsCollection != "test" {
 		t.Errorf("Unexpected non-equal collections")
 	}
 }
@@ -33,9 +33,9 @@ func TestMigrationsRegistration(t *testing.T) {
 	defer func() {
 		globalMigrate = oldMigrate
 	}()
-	globalMigrate = NewMigrate(nil)
+	globalMigrate = map[string]*Migrate{}
 
-	err := Register(func(db *mongo.Database) error {
+	err := Register("test", func(db *mongo.Database) error {
 		return nil
 	}, func(db *mongo.Database) error {
 		return nil
@@ -44,7 +44,7 @@ func TestMigrationsRegistration(t *testing.T) {
 		t.Errorf("Unexpected register error: %v", err)
 		return
 	}
-	registered := RegisteredMigrations()
+	registered := RegisteredMigrations("test")
 	if len(registered) <= 0 || len(registered) > 1 {
 		t.Errorf("Unexpected length of registered migrations")
 		return
@@ -53,7 +53,7 @@ func TestMigrationsRegistration(t *testing.T) {
 		t.Errorf("Unexpected version/description: %d %s", registered[0].Version, registered[0].Description)
 	}
 
-	err = Register(func(db *mongo.Database) error {
+	err = Register("test", func(db *mongo.Database) error {
 		return nil
 	}, func(db *mongo.Database) error {
 		return nil
@@ -71,13 +71,13 @@ func TestMigrationMustRegistration(t *testing.T) {
 			t.Errorf("Unexpected panic: %v", r)
 		}
 	}()
-	globalMigrate = NewMigrate(nil)
-	MustRegister(func(db *mongo.Database) error {
+	globalMigrate = map[string]*Migrate{}
+	MustRegister("test", func(db *mongo.Database) error {
 		return nil
 	}, func(db *mongo.Database) error {
 		return nil
 	})
-	registered := RegisteredMigrations()
+	registered := RegisteredMigrations("test")
 	if len(registered) <= 0 || len(registered) > 1 {
 		t.Errorf("Unexpected length of registered migrations")
 		return
